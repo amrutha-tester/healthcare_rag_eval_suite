@@ -1106,6 +1106,7 @@ dependencies = [
     { name = "langchain-core" },
     { name = "langchain-google-genai" },
     { name = "langchain-ollama" },
+    { name = "pydantic" },
     { name = "pymupdf" },
 ]
 
@@ -1116,6 +1117,7 @@ requires-dist = [
     { name = "langchain-core", specifier = ">=1.8.1" },
     { name = "langchain-google-genai", specifier = ">=4.5.0" },
     { name = "langchain-ollama", specifier = ">=1.1.0" },
+    { name = "pydantic", specifier = ">=2.14.3" },
     { name = "pymupdf", specifier = ">=2.1" },
 ]
 

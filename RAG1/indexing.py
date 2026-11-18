@@ -4,13 +4,11 @@ from pathlib import Path
 from dotenv import load_dotenv
 from langchain_core.vectorstores import InMemoryVectorStore
 
-# Ensure the project root is in Python's path, then import from RAG1.file_reader
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from RAG1.file_reader import extract_paragraphs_from_folder
 
 load_dotenv()
-
-# 1. Choose the free embedding model (Ollama locally by default, or Gemini in CI)
+# 1. Choosing an embedding model
 provider = os.getenv("LLM_PROVIDER", "ollama").lower()
 
 if provider == "gemini":
@@ -24,7 +22,7 @@ else:
 
 # 2. Initialize the in-memory vector store
 vector_store = InMemoryVectorStore(embedding)
-vectore_store = vector_store  # Alias in case later video files use the author's spelling
+
 
 # 3. Extract paragraphs from all 10 healthcare PDFs in data/leaflets/
 LEAFLETS_DIR = Path(__file__).resolve().parent.parent / "data" / "leaflets"
