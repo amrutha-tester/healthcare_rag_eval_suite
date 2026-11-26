@@ -6,3 +6,5 @@ __pycache__/
 .deepeval/
 .promptfoo/
 chroma_db/
+test_geval_correctness_metrics.py
+test_eval_answer_relevancy_faithfulness.py

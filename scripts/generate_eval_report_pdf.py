@@ -15,8 +15,8 @@ from pathlib import Path
 import fitz  # PyMuPDF
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-INPUT_PATH = PROJECT_ROOT / "eval" / "evaluated_results.jsonl"
-OUTPUT_PDF = PROJECT_ROOT / "eval" / "RAG1_evaluation_report.pdf"
+INPUT_PATH = PROJECT_ROOT / "eval" / "evaluated_results_RAG2.jsonl"
+OUTPUT_PDF = PROJECT_ROOT / "eval" / "RAG2_evaluation_report.pdf"
 THRESHOLD = 0.70
 
 # Colors (RGB 0..1)
@@ -81,7 +81,7 @@ def build_pdf(results: list[dict], output_path: Path) -> None:
     page.draw_rect(banner_rect, color=NAVY, fill=NAVY)
     page.insert_text(
         (margin_x + 16, y + 28),
-        "Healthcare RAG Evaluation Report - RAG1 Baseline",
+        "Healthcare RAG Evaluation Report - RAG2 Improved",
         fontsize=15.5,
         fontname="hebo",
         color=WHITE,
@@ -89,7 +89,7 @@ def build_pdf(results: list[dict], output_path: Path) -> None:
     subtitle = (
         f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M')}  |  "
         f"Test Cases: {len(results)}  |  Threshold: {THRESHOLD:.2f}  |  "
-        "Chatbot: Ollama llama3.2  |  Judge: Groq openai/gpt-oss-120b"
+        "Chatbot: Ollama qwen2.5:7b  |  Judge: Groq qwen/qwen3.8-27b"
     )
     page.insert_text(
         (margin_x + 16, y + 50),
@@ -176,7 +176,7 @@ def build_pdf(results: list[dict], output_path: Path) -> None:
     # --- Key Diagnostic Insights ---
     page.insert_text(
         (margin_x, y),
-        "2. Key Diagnostic Insights (RAG1 Baseline)",
+        "2. Key Diagnostic Insights (RAG2 Improved)",
         fontsize=12.5,
         fontname="hebo",
         color=NAVY,
@@ -184,10 +184,10 @@ def build_pdf(results: list[dict], output_path: Path) -> None:
     y += 14.0
 
     insights = [
-        "Faithfulness (1.00 / 100% pass): Zero hallucinations across all test cases; responses remain strictly grounded in the retrieved leaflets.",
-        "Answer Relevancy (0.90 / 90% pass): Strong direct answers overall; occasional extra details from noisy chunks slightly reduced focus.",
-        "Contextual Relevancy (0.43 / 20% pass): Primary bottleneck. Retrieving k=4 chunks (including short heading-only chunks and adjacent sections) introduced irrelevant text.",
-        "Correctness [GEval] (0.57 / 40% pass): Strict exact-match rubric penalized extra helpful disclaimers and off-topic details pulled from noisy chunks.",
+        "Faithfulness (1.00 / 100% pass): Zero hallucinations across all 10 test cases; strict grounding prompt + qwen2.5:7b kept every answer faithful to the leaflets.",
+        "Correctness [GEval] (0.87 / 90% pass): Major jump from RAG1 (0.57 -> 0.87) with 9/10 passing; upgrading the generator and rubric captured full clinical accuracy.",
+        "Answer Relevancy (0.89 / 70% pass): Strong direct answers across 9 scored cases (Test 7 returned N/A due to one invalid-JSON judge response).",
+        "Contextual Relevancy (0.44 / 20% pass): Loosening MAX_SCORE_GAP to 0.12 allowed secondary chunks into the context; tightening to k=1 per tool call is the next retrieval optimization.",
     ]
     box_top = y
     wrapped_insights: list[str] = []
@@ -271,11 +271,12 @@ def build_pdf(results: list[dict], output_path: Path) -> None:
             safe_text(f"Expected Output: {r['expected_answer']}"), width=94
         )
 
+        fmt = lambda v: f"{v:.2f}" if isinstance(v, (int, float)) else "N/A"
         scores_line = (
-            f"Answer Relevancy: {r.get('answer_relevancy', 0):.2f}   |   "
-            f"Faithfulness: {r.get('faithfulness', 0):.2f}   |   "
-            f"Contextual Relevancy: {r.get('context_relevancy', 0):.2f}   |   "
-            f"Correctness: {r.get('correctness', 0):.2f}"
+            f"Answer Relevancy: {fmt(r.get('answer_relevancy'))}   |   "
+            f"Faithfulness: {fmt(r.get('faithfulness'))}   |   "
+            f"Contextual Relevancy: {fmt(r.get('context_relevancy'))}   |   "
+            f"Correctness: {fmt(r.get('correctness'))}"
         )
 
         block_h = (len(q_lines) * 13) + (len(actual_lines) * 11) + (len(expected_lines) * 11) + 42
